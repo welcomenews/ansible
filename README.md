@@ -12,6 +12,11 @@ ansible-playbook reactjs_playbook.yml --check
 ## Проверить доступность всех хостов из списка hosts
 ansible -i hosts all -m ping
 
+## To reboot all the servers in the [atlanta] group
+ansible atlanta -a "/sbin/reboot"
+
+## Выполнить shell команду
+ansible raleigh -m shell -a 'echo $TERM'
 
 ```
 
