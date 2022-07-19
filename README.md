@@ -15,10 +15,10 @@ ansible -i hosts all -m ping
 ## Увидить всё на всх машинах
 ansible all -m setup
 
-## Проверить что именно запуститься и на каких серверах.
+## Проверить что именно запуститься и на каких серверах. (Выполнения не будет, только инфа)
 ansible-playbook -K -i consul.inv site.yml --list-tasks
 
-## Проверить на каких серверах будет запуск.
+## Проверить на каких серверах будет запуск. (Выполнения не будет, только инфа)
 ansible-playbook -K -i consul.inv site.yml --list-hosts
 
 ## To reboot all the servers in the [atlanta] group
