@@ -21,6 +21,12 @@ ansible-playbook -K -i consul.inv site.yml --list-tasks
 ## Проверить на каких серверах будет запуск. (Выполнения не будет, только инфа)
 ansible-playbook -K -i consul.inv site.yml --list-hosts
 
+## Проверить в каких тасках есть тэги на которых будет запуск.
+ansible-playbook -K -i consul.inv site.yml --list-tasks --tags tagged
+
+## Проверить в каких тасках нет тэгов и на которых не будет запуск.
+ansible-playbook -K -i consul.inv site.yml --list-tasks --tags untagged
+
 ## To reboot all the servers in the [atlanta] group
 ansible atlanta -a "/sbin/reboot"
 
