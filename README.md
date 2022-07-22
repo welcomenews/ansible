@@ -27,6 +27,9 @@ ansible-playbook -K -i consul.inv site.yml --list-tasks --tags tagged
 ## Проверить в каких тасках нет тэгов и на которых не будет запуск.
 ansible-playbook -K -i consul.inv site.yml --list-tasks --tags untagged
 
+## Проверить, что запуститься только там где нет тэга nginx.
+ansible-playbook -K -i consul.inv site.yml --list-tasks --skip-tags nginx
+
 ## To reboot all the servers in the [atlanta] group
 ansible atlanta -a "/sbin/reboot"
 
