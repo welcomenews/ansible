@@ -1,0 +1,6 @@
+[{{ item.name }}]
+name={{ item.comment | default("{{ item.name }}") }}
+baseurl={{ item.baseurl }}
+enabled={{ item.enabled | default(1) }}
+gpgcheck={{ item.gpgcheck | default(0) }}
+

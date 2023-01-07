@@ -1,0 +1,10 @@
+---
+- hosts: 
+    - web
+    - adserving
+  become: yes
+  become_user: root
+  roles:
+    - web
+    - { role: haproxy, tags: role_haproxy }
+

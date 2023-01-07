@@ -1,0 +1,14 @@
+[inventory_test:children]
+servers
+
+[servers]
+app-dev
+app-qa
+app-lb.dev
+
+[web]
+app-qa
+app-dev
+
+[lb]
+app-lb.dev

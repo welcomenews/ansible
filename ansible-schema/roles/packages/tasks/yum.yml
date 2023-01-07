@@ -1,0 +1,10 @@
+---
+- name: packages | Adding yum repository
+  template: src=yum.repo.j2 dest=/etc/yum.repos.d/{{ item.name }}.repo owner=root group=root mode=0644
+  with_items: packages_repositories_yum
+  tags: packages
+
+- name: packages | Install packages
+  yum: pkg={{ item.name }} state={{ item.state | default("present") }}
+  with_items: packages_list_yum
+  tags: packages

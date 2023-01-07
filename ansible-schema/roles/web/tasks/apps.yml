@@ -1,0 +1,58 @@
+---
+- name: Installing git
+  apt: name=git state=present update_cache=yes
+
+- name: Setting www-data user
+  user: name=www-data shell=/bin/bash password="*NP*"
+
+- name: Creating home
+  file: path=/var/www state=directory owner=www-data group=www-data mode=0755
+
+- name: Allow www-data to reload php5.6-fpm
+  copy:
+    content: |
+      www-data ALL=(root) NOPASSWD:/etc/init.d/php5.6-fpm reload
+    dest: /etc/sudoers.d/www-data
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: Setting authorized_keys for www-data
+  authorized_key: user=www-data key={{ item }}
+  with_items:
+    - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtCGJinXDwKlenUFSsGWisxaF0DcNiV8utVEmfka3se0CW2yNIr1vDCeJxPdAlxGG0O/28WLWuTArLiDsTJjYqN+VchXLAfQmCn+5A313RjZlJK0KSxgL8IP6Q68diUzuCKdisjhKIKISTCzfL7uTKE0JEsUsF7bfSYvOEBtYFLWD1XH4qmi6HeFpSsnr7EPVC7FZzFdOgpZ6Vm6fwS7ygdVLapm6SH1lkNm0Xnt3WjaPkZaWRcAmUxC0RWT36QNwbBKTVLaFbfuF4FBeuBm7cwt2a/nnQzpbk9lVkeZYhFxH/5Zi8Uv8LYYJwTBvYzXaceDdH2zSxYwltiCTaKiYl vozerov@MacBook-Pro-Vasilij.local"
+  tags:
+    - www-data
+
+- name: Creating application dirs
+  file: path=/home/{{ item }} state=directory owner=www-data group=www-data mode=0755
+  with_items:
+    - "apisrwx"
+    - "testapisrwx"
+
+- name: Installing upload data script
+  template: src=usr/local/bin/vertica.import.imei.data dest=/usr/local/bin/vertica.import.imei.data owner=root group=root mode=0755
+  tags:
+    - "imei-script"
+
+- name: Installing rsync
+  apt: name=rsync state=present update_cache=yes
+
+- name: Install python-pip module
+  apt: name=python-pip state=present update_cache=yes
+
+- name: Installing s3cmd
+  pip: name=s3cmd
+
+- name: Setting up s3cfg
+  template: src=root/.s3cfg dest=/root/.s3cfg owner=root group=root mode=0600
+
+- name: Setting up cron
+  cron: name="upload data to vertica" job="/usr/local/bin/vertica.import.imei.data >> /var/log/vertica.import.imei.data.log 2>&1"
+  tags: cron
+
+- name: Setting up cleaning script for /tmp
+  cron: name="Removing old /tmp files" job="/bin/bash -l -c '/usr/bin/find /tmp/ -mtime +1 -user www-data -delete' >/dev/null 2>&1" hour=23 minute=0
+  tags: cron
+
+- name: Setting up cleaning script for /backup
+  cron: name="Removing old /backup files" job="/bin/bash -l -c '/usr/bin/find /backup/ -type f -mtime +7 -user www-data -delete' >/dev/null 2>&1" hour=22 minute=0
+  tags: cron

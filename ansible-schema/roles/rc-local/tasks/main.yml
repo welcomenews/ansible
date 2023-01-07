@@ -1,0 +1,4 @@
+---
+- name: Setting up rc.local
+  template: src=etc/rc.local.j2 dest=/etc/rc.local owner=root group=root mode=0755
+  notify: run rc-local

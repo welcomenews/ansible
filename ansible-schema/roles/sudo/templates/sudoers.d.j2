@@ -1,0 +1,2 @@
+# {{ ansible_managed }}
+{{ item.user | mandatory }} {{ item.hosts | default(['ALL']) | join(',') }}=({{ item.asusers | default(['ALL']) | join(',') }}) {{ "NOPASSWD:" if item.nopasswd else "" }}{{ item.commands | default(['ALL']) | join(',') }}

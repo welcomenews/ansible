@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -z "${4}" ] ; then
+  echo "Usage: $0 <proxy_address> <proxy_port> <server_address> <server_port>"
+  exit 1;
+fi
+
+SERVER_ADDRESS=$3
+SERVER_PORT=$4
+MYSQL_USER="haproxy"
+
+/usr/bin/mysql --no-defaults -u${MYSQL_USER} -h${SERVER_ADDRESS} -P${SERVER_PORT} -Ne 'select @@hostname, @@port'

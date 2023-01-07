@@ -1,0 +1,15 @@
+---
+- name: add repo
+  apt_repository: repo="deb http://deb.robustperception.io/ precise nightly"
+
+- name: apt key import
+  apt_key: url="https://s3-eu-west-1.amazonaws.com/deb.robustperception.io/41EFC99D.gpg" state=present
+
+- name: install node-exporter
+  apt: name=node-exporter force=yes
+  notify: restart node-exporter
+
+- name: Adding init script
+  template: src=etc/init.d/node-exporter dest=/etc/init.d/node-exporter owner=root group=root mode=0755
+  notify: restart node-exporter
+

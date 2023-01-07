@@ -1,0 +1,13 @@
+/var/log/php-fpm/*.log {
+        daily
+        missingok
+        rotate 2
+        notifempty
+        create 644 www-data www-data
+        sharedscripts
+        postrotate
+                if [ -f /var/run/php/php5.6-fpm.pid ]; then
+                        kill -USR1 `cat /var/run/php/php5.6-fpm.pid`
+                fi
+        endscript
+}

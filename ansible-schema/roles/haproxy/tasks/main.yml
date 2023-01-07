@@ -1,0 +1,101 @@
+---
+
+- name: Installing haproxy-exporter
+  when: ansible_distribution == 'Ubuntu'
+  block:
+
+    - name: Adding haproxy repository
+      apt_repository: repo="ppa:vbernat/haproxy-1.8"
+
+    - name: Installing haproxy
+      apt: name={{ item }} state=present force=yes update_cache=yes cache_valid_time=3600
+      with_items:
+        - haproxy=1.8*
+        - socat
+        - mysql-client
+
+
+- name: 'adding rsyslog config for haproxy'
+  template: src=usr/sbin/haproxy-mysql-check dest=/usr/sbin/haproxy-mysql-check owner=root group=root mode=0755 backup=no
+  tags: 
+    - haproxy
+    - configs
+
+- name: Setting up haproxy configuration
+  template: src=etc/haproxy/haproxy.cfg dest=/etc/haproxy/haproxy.cfg owner=root group=root mode=0644 validate="/usr/sbin/haproxy -c -f %s"
+  notify: reload haproxy
+  tags:
+    - haproxy
+    - configs
+
+- name: Starting and enabling haproxy
+  service: name=haproxy state=started enabled=yes
+
+- name: Creating directories (Ubuntu)
+  file: dest={{ item.dst }} owner={{ item.owner }} group={{ item.group }} mode=0755 state=directory
+  with_items:
+    - { dst: /var/log/haproxy, owner: syslog, group: syslog }
+  when: ansible_distribution == 'Ubuntu'
+  loop_control:
+    label: "{{ item.dst }}"
+
+- name: Copying logrotate and rsyslog configs
+  template: src={{ item.src }} dest=/{{ item.src }} force=yes mode={{ item.mode }}
+  notify:
+    - restart rsyslog
+  with_items:
+    - { src: etc/logrotate.d/haproxy, mode: 644 }
+    - { src: etc/rsyslog.d/49-haproxy.conf, mode: 644 }
+  loop_control:
+    label: "/{{ item.src }}"
+
+- name: Configuring rsyslog to load imudp module and listen UDP
+  lineinfile:
+    dest: /etc/rsyslog.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backrefs: yes
+  with_items:
+    - { regexp: '^#\$ModLoad imudp',     line: '$ModLoad imudp' }
+    - { regexp: '^#\$UDPServerRun 514',  line: '$UDPServerRun 514' }
+    # Ubuntu 16:
+    - { regexp: '^#module\(load="imudp"\)',             line: 'module(load="imudp")' }
+    - { regexp: '^#input\(type="imudp" port="514"\)',   line: 'input(type="imudp" port="514")' }
+  loop_control:
+    label: "{{ item.regexp }} -> {{ item.line }}"
+  notify:
+    - restart rsyslog
+  # changed_when: False
+
+- name: Getting current haproxy_exporter version
+  shell: /usr/local/bin/haproxy_exporter --version 2>&1 | head -1 | awk '{print $3}'
+  register: _haproxy_exporter_version
+  changed_when: False
+  ignore_errors: yes
+  check_mode: no
+  tags: 
+    - haproxy-exporter
+
+- name: Installing haproxy-exporter
+  when: _haproxy_exporter_version is not defined or _haproxy_exporter_version.stdout != haproxy_exporter_version
+  check_mode: no
+  tags: 
+    - haproxy-exporter
+  block:
+
+    - name: Installing haproxy-exporter ({{haproxy_exporter_version}})
+      get_url: 
+        url: https://github.com/prometheus/haproxy_exporter/releases/download/v{{haproxy_exporter_version}}/haproxy_exporter-{{haproxy_exporter_version}}.linux-amd64.tar.gz 
+        dest: /root/haproxy_exporter-{{haproxy_exporter_version}}.linux-amd64.tar.gz
+
+    - name: Unarchiving haproxy-exporter
+      unarchive: src=/root/haproxy_exporter-{{haproxy_exporter_version}}.linux-amd64.tar.gz dest=/root/ remote_src=yes
+
+    - name: Copying haproxy-exporter to bin directory
+      copy: src=/root/haproxy_exporter-{{haproxy_exporter_version}}.linux-amd64/haproxy_exporter dest=/usr/local/bin/haproxy_exporter owner=root group=root mode=0755 remote_src=yes
+
+    - name: Install init.d script for haproxy-exporter
+      template: src=etc/init.d/haproxy-exporter dest=/etc/init.d/haproxy-exporter owner=root group=root mode=0755
+
+    - name: Starting haproxy-exporter
+      service: name=haproxy-exporter state=restarted enabled=yes

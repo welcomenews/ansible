@@ -1,0 +1,117 @@
+---
+- name: Installing suggested packages
+  apt: name={{ item }} state=present update_cache=yes
+  with_items:
+    - "libluajit-5.1-dev"
+    - "libgeoip-dev"
+    - "lua5.2"
+    - "libmaxminddb0"
+    - "libmaxminddb-dev"
+
+- name: Upload nginx deb package
+  copy: src=root/nginx_1.12.1_amd64.deb dest=/root/nginx_1.12.1_amd64.deb owner=root group=root mode=0644
+
+- name: Installing nginx
+  apt: deb=/root/nginx_1.12.1_amd64.deb
+
+- name: Creating nginx override dir
+  file: path=/etc/systemd/system/nginx.service.d/ state=directory owner=root group=root
+
+- name: Overriding nginx limits
+  template: src=etc/systemd/system/nginx.service.d/override.conf.j2 dest=/etc/systemd/system/nginx.service.d/override.conf owner=root group=root mode=0644
+  notify:
+    - reload systemd
+    - restart nginx
+  
+- name: Create common directories
+  file: path=/etc/nginx/{{ item }} state=directory owner=root group=root mode=0755
+  with_items:
+    - "geoip"
+    - "ssl"
+
+- name: Uploading geoip databases
+  copy: src=etc/nginx/geoip/{{ item }} dest=/etc/nginx/geoip/{{ item }}
+  with_items:
+    - "GeoIP.dat"
+    - "GeoIP2-Connection-Type.mmdb"
+    - "GeoIPCity.dat"
+    - "GeoIPOrg.dat"
+  notify: reload nginx
+
+- name: Copying ssl certificates
+  template: src=etc/nginx/ssl/{{ item }}.crt dest=/etc/nginx/ssl/{{ item }}.crt owner=root group=root mode=0644
+  with_items:
+    - "api.srwx.net"
+    - "test.api.srwx.net"
+  notify: reload nginx
+
+- name: Copying ssl keys
+  template: src=etc/nginx/ssl/{{ item }}.key dest=/etc/nginx/ssl/{{ item }}.key owner=root group=root mode=0644
+  with_items:
+    - "api.srwx.net"
+    - "test.api.srwx.net"
+  notify: reload nginx
+
+- name: Installing nginx config
+  template: src=etc/nginx/nginx.conf.j2 dest=/etc/nginx/nginx.conf owner=root group=root mode=0644
+  notify: reload nginx
+  tags:
+    - nginx
+
+- name: Setting up geoip/fcgi configuration
+  template: src=etc/nginx/{{ item }} dest=/etc/nginx/{{ item }} owner=root group=root mode=0644
+  with_items:
+    - "fastcgi.conf"
+    - "geoip.fastcgi.conf"
+    - "geoip.headers.conf"
+  notify: reload nginx
+
+- name: Installing web sites
+  template: src=etc/nginx/conf.d/{{ item }}.conf dest=/etc/nginx/conf.d/{{ item }}.conf owner=root group=root mode=0644
+  with_items:
+    - "api.srwx.net"
+    - "test.api.srwx.net"
+  notify: reload nginx
+  tags:
+    - nginx
+
+- name: Removing default.conf
+  file: path=/etc/nginx/conf.d/default.conf state=absent
+
+- name: Starting and enabling nginx
+  service: name=nginx state=started enabled=yes
+
+- name: Setting up logrotate
+  template: src=etc/logrotate.d/nginx.j2 dest=/etc/logrotate.d/nginx owner=root group=root mode=0644
+  tags:
+    - logrotate
+
+- name: Installing nginx-vts-exporter
+  get_url: url=https://github.com/hnlq715/nginx-vts-exporter/releases/download/v0.6/nginx-vts-exporter-0.6.linux-amd64.tar.gz dest=/root/nginx-vts-exporter-0.6.linux-amd64.tar.gz
+
+- name: Unarchiving nginx-vts-exporter
+  unarchive: src=/root/nginx-vts-exporter-0.6.linux-amd64.tar.gz dest=/root/ remote_src=yes
+
+- name: Copying nginx-vts-exporter to bin directory
+  copy: src=/root/nginx-vts-exporter-0.6.linux-amd64/nginx-vts-exporter dest=/usr/local/bin/nginx-vts-exporter owner=root group=root mode=0755 remote_src=yes
+
+- name: Install init.d script for nginx-vts-exporter
+  template: src=etc/init.d/nginx-vts-exporter dest=/etc/init.d/nginx-vts-exporter owner=root group=root mode=0755
+
+- name: Starting nginx-vts-exporter
+  service: name=nginx-vts-exporter state=started enabled=yes
+
+- name: Installing nginx-vts-exporter
+  get_url: url=https://github.com/martin-helmich/prometheus-nginxlog-exporter/releases/download/v1.0.1/prometheus-nginxlog-exporter dest=/usr/local/bin/nginxlog-exporter owner=root group=root mode=0755
+
+- name: Installing configuration for nginxlog-exporter
+  template: src=etc/nginxlog-exporter.hcl dest=/etc/nginxlog-exporter.hcl owner=root group=root mode=0644
+  tags:
+    - nginxlog
+
+- name: Install init.d script for nginx-log-exporter
+  template: src=etc/init.d/nginx-log-exporter dest=/etc/init.d/nginx-log-exporter owner=root group=root mode=0755
+
+- name: Starting nginx-log-exporter
+  service: name=nginx-log-exporter state=started enabled=yes
+

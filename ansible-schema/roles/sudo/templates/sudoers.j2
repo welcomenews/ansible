@@ -1,0 +1,45 @@
+# {{ansible_managed}}
+
+# Including sudoers.d directory
+#includedir /etc/sudoers.d
+
+# Defaults
+{% for defaults in sudo_defaults %}
+Defaults {{ defaults }}
+{% endfor %}
+
+# Command aliases
+{% if sudo_cmndalias is defined %}
+{% for name, alias in sudo_cmndalias.iteritems() %}
+Cmnd_Alias {{ name }} = {{ alias }}
+{% endfor %}
+{% endif %}
+
+# Host aliases
+{% if sudo_hostalias is defined %}
+{% for name, alias in sudo_hostalias.iteritems() %}
+Host_Alias {{ name }} = {{ alias }}
+{% endfor %}
+{% endif %}
+
+# User aliases
+{% if sudo_useralias is defined %}
+{% for name, alias in sudo_useralias.iteritems() %}
+User_Alias {{ name }} = {{ alias }}
+{% endfor %}
+{% endif %}
+
+# Run As aliasses
+{% if sudo_runasalias is defined %}
+{% for name, alias in sudo_runasalias.iteritems() %}
+Runas_Alias {{ name }} = {{ alias }}
+{% endfor %}
+{% endif %}
+
+# Root user
+root ALL=(ALL) NOPASSWD:ALL
+
+# The users
+{% for sudoer in sudo_sudoers %}
+{{ sudoer.name | mandatory }} {{ sudoer.hosts | default(['ALL']) | join(',') }}=({{ sudoer.asusers | default(['ALL']) | join(',') }}) {{ "NOPASSWD:" if sudoer.nopasswd else "" }}{{ sudoer.commands | default(['ALL']) | join(',') }}
+{% endfor %}

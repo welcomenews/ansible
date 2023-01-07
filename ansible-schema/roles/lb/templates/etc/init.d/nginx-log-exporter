@@ -1,0 +1,65 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:     nginx-log-exporter
+# Required-Start:   $remote_fs $syslog
+# Required-Stop:    $remote_fs $syslog
+# Default-Start:    2 3 4 5
+# Default-Stop:
+# Short-Description:    Nginx LOG Exporter Daemon
+### END INIT INFO
+
+# Quick start-stop-daemon example, derived from Debian /etc/init.d/
+set -e
+
+# Must be a valid filename
+NAME=nginxlog-exporter
+#This is the command to be run, give the full pathname
+DAEMON=/usr/local/bin/$NAME
+DAEMON_OPTS="-config-file /etc/nginxlog-exporter.hcl"
+
+export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+
+if [ -f /etc/default/$NAME ]; then
+  . /etc/default/$NAME
+fi
+
+PIDFILE=/var/run/${NAME}.pid
+if [ -f $PIDFILE ] && ! ps h `cat $PIDFILE` > /dev/null
+then
+  echo "Removing stale pidfile..."
+  rm $PIDFILE
+fi
+
+do_start () {
+  PIDFILE=/var/run/${NAME}.pid
+  echo -n "Starting daemon: $NAME"
+  start-stop-daemon --start --background --quiet --make-pidfile --pidfile $PIDFILE --startas /bin/bash -- -c "exec $DAEMON $DAEMON_OPTS > /var/log/nginxlog-exporter.log 2>&1"
+  echo .
+}
+
+do_stop () {
+  PIDFILE=/var/run/${NAME}.pid
+  echo -n "Stopping daemon: $NAME"
+  start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
+  echo .
+}
+
+case "$1" in
+  start)
+	do_start
+	;;
+  stop)
+	do_stop
+	;;
+  restart)
+	do_stop
+	do_start
+	;;
+
+  *)
+	echo "Usage: "$1" {start|stop|restart}"
+	exit 1
+esac
+
+exit 0

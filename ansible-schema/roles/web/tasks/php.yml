@@ -1,0 +1,101 @@
+---
+- name: Adding php 5.6 repo
+  apt_repository: repo="ppa:ondrej/php"
+
+- name: Installing php5.6 modules
+  apt: name={{ item }} update_cache=yes
+  with_items:
+    - "php5.6-cli"
+    - "php5.6-curl"
+    - "php5.6-fpm"
+    - "php5.6-json"
+    - "php5.6-mysql"
+    - "php5.6-opcache"
+    - "php5.6-pgsql"
+    - "php5.6-xml"
+    - "php5.6-redis"
+    - "php5.6-memcache"
+    - "php5.6-mbstring"
+    - "libboost-thread1.58.0"
+    - "libboost-thread1.58.0"
+    - "librdkafka1"
+  tags:
+    - php-mods
+
+- name: Uploading custome modules
+  copy: src=usr/lib/php/{{ item }} dest=/usr/lib/php/20131226/{{ item }} owner=root group=root mode=0644
+  with_items:
+    - "bitset.so"
+    - "hidef.so"
+    - "protobuf.so"
+    - "voltdb.so"
+    - "tarantool.so"
+    - "rdkafka.so"
+  tags:
+    - php-mods
+
+- name: Loading modules
+  template: src=etc/php/5.6/mods-available/{{ item }}.ini dest=/etc/php/5.6/mods-available/{{ item }}.ini owner=root group=root mode=0644
+  with_items:
+    - "bitset"
+    - "hidef"
+    - "protobuf"
+    - "voltdb"
+    - "tarantool"
+    - "rdkafka"
+  tags:
+    - php-mods
+
+- name: Enabling modules for fpm
+  file: src=/etc/php/5.6/mods-available/{{ item }}.ini dest=/etc/php/5.6/fpm/conf.d/{{ item }}.ini state=link
+  with_items:
+    - "bitset"
+    - "hidef"
+    - "protobuf"
+    - "voltdb"
+    - "tarantool"
+    - "rdkafka"
+  tags:
+    - php-mods
+
+- name: Enabling modules for cli
+  file: src=/etc/php/5.6/mods-available/{{ item }}.ini dest=/etc/php/5.6/cli/conf.d/{{ item }}.ini state=link
+  with_items:
+    - "bitset"
+    - "hidef"
+    - "protobuf"
+    - "voltdb"
+    - "tarantool"
+    - "rdkafka"
+  tags:
+    - php-mods
+
+- name: Setting up php ini
+  template: src=etc/php/5.6/fpm/php.ini.j2 dest=/etc/php/5.6/fpm/php.ini owner=root group=root mode=0644
+  notify: reload php5.6-fpm
+
+- name: Setting pool configuration
+  template: src=etc/php/5.6/fpm/pool.d/{{ item }}.conf.j2 dest=/etc/php/5.6/fpm/pool.d/{{ item }}.conf owner=root group=root mode=0644
+  with_items:
+    - "www"
+  notify: reload php5.6-fpm
+
+- name: Creating log directory for fpm
+  file: path=/var/log/php-fpm state=directory owner=www-data group=www-data mode=0755
+
+- name: Creating php5.6-fpm override dir
+  file: path=/etc/systemd/system/php5.6-fpm.service.d/ state=directory owner=root group=root
+
+- name: Overriding php-fpm limits
+  template: src=etc/systemd/system/php5.6-fpm.service.d/override.conf.j2 dest=/etc/systemd/system/php5.6-fpm.service.d/override.conf owner=root group=root mode=0644
+  notify:
+    - reload systemd
+    - restart php5.6-fpm
+
+- name: Setting up logrotate
+  template: src=etc/logrotate.d/php-fpm.j2 dest=/etc/logrotate.d/php-fpm owner=root group=root mode=0644
+  tags:
+    - logrotate
+
+- name: Starting and enabling php5.6-fpm
+  service: name=php5.6-fpm state=started enabled=yes

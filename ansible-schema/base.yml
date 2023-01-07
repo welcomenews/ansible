@@ -1,0 +1,14 @@
+---
+- hosts: all:!common
+  become: yes
+  become_user: root
+  roles:
+    - openssh
+    - sudo
+    - users
+    - packages
+    - node-exporter
+    - sysctl
+    - rc-local
+  vars_files:
+    - "group_vars/env.yml"

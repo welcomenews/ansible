@@ -1,0 +1,21 @@
+# file: openssh/tasks/main.yml
+
+- name: OpenSSH | Configure OpenSSH Client
+  template:
+    src: etc/ssh/ssh_config.j2
+    dest: /etc/ssh/ssh_config
+    owner: root
+    group: root
+    mode: 0644
+  tags: openssh
+
+- name: onfigure OpenSSH Server
+  template:
+    src: etc/ssh/sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart ssh
+  tags: openssh

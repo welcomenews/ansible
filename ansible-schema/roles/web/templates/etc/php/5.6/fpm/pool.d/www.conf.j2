@@ -1,0 +1,31 @@
+[www]
+listen = '/var/run/php-fpm.sock'
+
+listen.owner = www-data
+listen.group = www-data
+listen.mode = 0666
+listen.backlog = 1000
+user = www-data
+group = www-data
+
+pm = static
+pm.max_children = 500
+pm.max_requests = 500
+pm.status_path = /status
+
+ping.path = /ping
+ping.response = pong
+
+access.log = /var/log/php-fpm/$pool.access.log
+access.format = "%R - %u %t \"%m %r%Q%q\" %s %f %{mili}d %{kilo}M %C%%"
+;slowlog = /var/log/php-fpm/$pool.slow.log
+;request_slowlog_timeout = 1
+request_terminate_timeout = 2
+chdir = /
+php_admin_value[error_log] = /var/log/php-fpm/$pool.error.log
+php_admin_flag[log_errors] = on
+catch_workers_output = yes
+
+;slowlog = /var/log/php-fpm/www-slow.log
+rlimit_files = 128000
+rlimit_core = unlimited

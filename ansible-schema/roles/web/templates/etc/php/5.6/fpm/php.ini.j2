@@ -1,0 +1,97 @@
+[PHP]
+user_ini.cache_ttl = 30
+engine = On
+safe_mode = Off
+short_open_tag = On
+asp_tags = Off
+precision = 14
+y2k_compliance = On
+zlib.output_compression = Off
+implicit_flush = Off
+unserialize_callback_func =
+serialize_precision = 100
+disable_functions = passthru,shell_exec,system
+disable_classes =
+expose_php = On
+max_input_time = 60
+error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT & ~E_NOTICE
+display_errors = Off
+display_startup_errors = Off
+max_execution_time = 2
+memory_limit = 128M
+log_errors = On
+log_errors_max_len = 2048
+ignore_repeated_errors = Off
+ignore_repeated_source = Off
+report_memleaks = On
+track_errors = Off
+xmlrpc_errors = 0
+xmlrpc_error_number = 0
+html_errors = On
+error_log = /var/log/php-fpm/php_error.log
+variables_order = "GPCS"
+request_order = "GP"
+register_globals = Off
+register_argc_argv = On
+auto_globals_jit = On
+post_max_size = 70M
+magic_quotes_runtime = Off
+magic_quotes_sybase = Off
+auto_prepend_file =
+default_mimetype = "text/html"
+enable_dl = Off
+cgi.fix_pathinfo=1
+file_uploads = On
+upload_max_filesize = 64M
+max_file_uploads = 20
+allow_url_fopen = Off
+allow_url_include = Off
+default_socket_timeout = 1
+[Date]
+date.timezone = "America/Los_Angeles"
+[Phar]
+phar.readonly = On
+[Syslog]
+define_syslog_variables  = Off
+sendmail_path = /usr/sbin/sendmail -t -i          ;
+mail.add_x_header = On
+[bcmath]
+bcmath.scale = 0
+[browscap]
+[Session]
+session.save_handler = files
+session.save_path = "/home/tmp"
+session.use_cookies = 1
+session.use_only_cookies = 1
+session.name = PHPSESSID
+session.auto_start = 0
+session.cookie_lifetime = 0
+session.cookie_path = /
+session.cookie_domain =
+session.cookie_httponly =
+session.serialize_handler = php
+session.gc_probability = 1
+session.gc_divisor = 1000
+session.gc_maxlifetime = 1440
+session.bug_compat_42 = Off
+session.bug_compat_warn = Off
+session.referer_check =
+session.entropy_length = 0
+session.cache_limiter = nocache
+session.cache_expire = 180
+session.use_trans_sid = 0
+session.hash_function = 0
+session.hash_bits_per_character = 5
+url_rewriter.tags = "a=href,area=href,frame=src,input=src,form=fakeentry"
+[sysvshm]
+[ldap]
+ldap.max_links = -1
+[opcache]
+; Determines if Zend OPCache is enabled
+opcache.enable=1
+opcache.validate_timestamps=On
+opcache.revalidate_freq=60
+opcache.max_accelerated_files=65535
+opcache.memory_consumption=1024
+opcache.interned_strings_buffer=64
+opcache.fast_shutdown=On

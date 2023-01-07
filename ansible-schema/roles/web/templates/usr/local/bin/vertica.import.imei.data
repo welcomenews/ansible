@@ -1,0 +1,148 @@
+#!/bin/bash
+#
+#----------------------------------------------------------------------------------------------------------#
+#-------------------------------------DATE AND TIME--------------------------------------------------------#
+#----------------------------------------------------------------------------------------------------------#
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+
+export TZ="/usr/share/zoneinfo/US/Pacific"					#Force the default timezone to PST
+THISHOST=$(hostname -f)
+
+CURRENT_MIN=$(date --date '-2 minute' +'%M')				#
+CURRENT_MIN=${CURRENT_MIN//[[:space:]]}						#
+CURRENT_DATE=$(date --date '-2 minute' +'%Y-%m-%d')			#
+HOUR_OF_DAY=$(date --date '-2 minute' +'%k')				#
+HOUR_OF_DAY=${HOUR_OF_DAY//[[:space:]]}						#
+CURRENT_HOUR=$(date --date '-2 minute' +'%Y_%m_%d_%k')		#
+CURRENT_HOUR=${CURRENT_HOUR//[[:space:]]}					#
+CURRENT_MIN_A=$(date +'%M')
+
+CURRENT_YEAR=$(date --date '-2 minute' +'%Y')				#
+CURRENT_YEAR=${CURRENT_YEAR//[[:space:]]}						#
+
+HYP_CURRENT_HOUR=$(date --date '-1 hour' +'%Y-%m-%d-%k')		#
+HYP_CURRENT_HOUR=${HYP_CURRENT_HOUR//[[:space:]]}					#
+
+#----------------------------------------------------------------------------------------------------------#
+
+#If current minute is less than 10 remove the leading 0
+if [ $CURRENT_MIN -lt 10 ]; then
+	#CURRENT_MIN=${CURRENT_MIN//0/''}
+	if [ -z "${CURRENT_MIN}" ]; then
+		CURRENT_MIN=0
+	fi
+fi
+
+
+for LOG_FILE in "/backup/data/delivery_log/srwx_user_devices_${CURRENT_HOUR}_${CURRENT_MIN}_"*
+do
+	if [ -f "$LOG_FILE" ]; then
+
+		FILE_NAME=${LOG_FILE/\/backup\/data\/delivery_log\//}
+		echo "------------------- GZIP ---------------------"
+		echo "FILE $LOG_FILE.gz"
+		echo "----------------------------------------------"
+
+		gzip -9 "${LOG_FILE}"
+
+		if [ -f "${LOG_FILE}.gz" ]; then
+			#curl -F "key=${FILE_NAME}.${THISHOST}.gz" -F "acl=private" -F "AWSAccessKeyId=AKIAI7IZGPCWTX2XTJPA" -F "Policy=eyAiZXhwaXJhdGlvbiI6ICIyMDE0LTAxLTAxVDEyOjAwOjAwLjAwMFoiLA0KICAiY29uZGl0aW9ucyI6IFsNCgkgeyJidWNrZXQiOiAiYWlycHVzaF9hbmFseXRpY3MiIH0sDQoJIHsiYWNsIjogInByaXZhdGUiIH0sDQoJIFsic3RhcnRzLXdpdGgiLCAiJGtleSIsICIiXQ0KICAgDQogIF19" -F "Signature=XivgFYoB8hjzmCbsv3LttWiZQy8=" -F "file=@${LOG_FILE}.gz"  https://srwx_analytics.s3.amazonaws.com/
+
+			s3cmd put "${LOG_FILE}.gz" "s3://redshift_tmp/SdkLogs/${FILE_NAME}.${THISHOST}.gz"
+			rsync -az ${LOG_FILE}.gz 10.10.33.12:/backup/hyptargeting/SdkLogs/${FILE_NAME}.${THISHOST}.gz
+			rm -f "${LOG_FILE}.gz"
+		fi
+	else
+		echo "Log file does not exists $LOG_FILE"
+	fi
+done
+
+USER_EMAIL_MAP="/backup/data/critical/hyptargeting/android_email_map_${CURRENT_HOUR}_${CURRENT_MIN}"
+
+if [ -f "$USER_EMAIL_MAP" ]; then
+
+	gzip -9 "$USER_EMAIL_MAP"
+
+	if [ -f "${USER_EMAIL_MAP}.gz" ]; then
+
+		FILE_NAME=${USER_EMAIL_MAP/\/backup\/data\/critical\/hyptargeting\//}
+
+		s3cmd put "${USER_EMAIL_MAP}.gz" "s3://redshift_tmp/UserEmailLogs/${FILE_NAME}.${THISHOST}.gz"
+		rsync -az ${USER_EMAIL_MAP}.gz 10.10.33.12:/backup/hyptargeting/UserEmailLogs/${FILE_NAME}.${THISHOST}.gz
+
+		rm -f "${USER_EMAIL_MAP}.gz"
+	fi
+else
+	echo "Log file does not exists $USER_EMAIL_MAP"
+fi
+
+if [ $CURRENT_MIN -eq 10 ]; then
+
+	HYPER_TARGETING_FILE="/backup/data/critical/hyptargeting/new_hypertarget-${HYP_CURRENT_HOUR}"
+
+	if [ -f "$HYPER_TARGETING_FILE" ]; then
+
+		FILE_NAME=${HYPER_TARGETING_FILE/\/backup\/data\/critical\/hyptargeting\//}
+
+		gzip -9 "$HYPER_TARGETING_FILE"
+
+		if [ -f "${HYPER_TARGETING_FILE}.gz" ]; then
+
+			s3cmd put "${HYPER_TARGETING_FILE}.gz" "s3://redshift_tmp/UserDevicePackageLogs/${FILE_NAME}.${THISHOST}.gz"
+			rsync -az ${HYPER_TARGETING_FILE}.gz 10.10.33.12:/backup/hyptargeting/UserDevicePackageLogs/${FILE_NAME}.${THISHOST}.gz
+
+			rm -f "${HYPER_TARGETING_FILE}.gz"
+
+		fi
+	else
+		echo "Log file does not exists $HYPER_TARGETING_FILE"
+	fi
+fi
+
+if [ $HOUR_OF_DAY -eq 1 ] && [ $CURRENT_MIN -eq 10 ]; then
+
+	BASE_DIR="/backup/data/critical/browserhistory"
+
+	if [ -d "$BASE_DIR" ]; then
+
+		BROWSER_HISTORY_FILE="${BASE_DIR}/browser_data_${CURRENT_YEAR}-"
+		COUNTER=1
+		TOTAL_FILES=$(ls -1 "$BASE_DIR/" | wc -l)
+
+		if [ $TOTAL_FILES -gt 1 ]; then
+			for LOG_FILE in "$BROWSER_HISTORY_FILE"*
+			do
+				if [ -f "$LOG_FILE" ]; then
+
+					FILE_NAME=${LOG_FILE/\/backup\/data\/critical\/browserhistory\//}
+					echo "------------------- GZIP ---------------------"
+					echo "FILE $LOG_FILE.gz"
+					echo "----------------------------------------------"
+
+					gzip -9 "${LOG_FILE}"
+
+					if [ -f "${LOG_FILE}.gz" ]; then
+
+						s3cmd put "${LOG_FILE}.gz" "s3://redshift_tmp/BrowserHistory/${FILE_NAME}.${THISHOST}.gz"
+						rsync -az ${LOG_FILE}.gz 10.10.33.12:/backup/hyptargeting/BrowserHistory/${FILE_NAME}.${THISHOST}.gz
+
+						rm  -f "${LOG_FILE}.gz"
+
+						TOTAL_FILES=$(ls -1 "$BASE_DIR/" | wc -l)
+
+						if [ $TOTAL_FILES -gt 1 ]; then
+							COUNTER=$[COUNTER + 1];
+							if [ $COUNTER -eq 5 ]; then
+								break
+							fi
+						fi
+					fi
+				fi
+			done
+		fi
+
+	else
+		echo "Directory $BASE_DIR don't exists"
+	fi
+fi
+

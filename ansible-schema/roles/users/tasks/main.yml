@@ -1,0 +1,26 @@
+---
+- name: Creating additional groups 
+  group: name="{{ item }}"
+  with_items:
+    - "{{ users_groups }}"
+
+- name: Creating users
+  user:
+    name={{ item.name | mandatory }}
+    comment="{{ item.comment | mandatory }}"
+    groups={{ item.groups | default([]) | join(',') }}
+    shell={{ item.shell | default('/bin/bash') }}
+    state={{ item.state | default('present') }}
+    remove={{ item.remove | default('no') }}
+    password="*NP*"
+  with_items:
+    - "{{ users_users }}"
+
+- name: users | Adding authorized_keys
+  authorized_key:
+    user={{ item.0.name }}
+    key="{{ item.1.key | mandatory }}"
+    state={{ item.1.state | default('present') }}
+  with_subelements:
+    - "{{ users_users }}"
+    - ssh_keys
