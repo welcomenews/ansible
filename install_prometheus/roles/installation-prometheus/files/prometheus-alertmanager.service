@@ -1,0 +1,17 @@
+[Unit]
+Description=Alertmanager Service
+After=network.target
+
+[Service]
+User=alertmanager
+Group=nogroup
+Type=simple
+ExecStart=/opt/alertmanager/alertmanager \
+         --config.file=/opt/alertmanager/alertmanager.yml \
+         --storage.path=/var/lib/prometheus/alertmanager \
+         --cluster.advertise-address=127.0.0.1:9093
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

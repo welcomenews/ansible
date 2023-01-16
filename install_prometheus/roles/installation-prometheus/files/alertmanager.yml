@@ -1,0 +1,36 @@
+global:
+  resolve_timeout: 1m
+
+route:
+  group_by: ['alertname', 'instance']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  # receiver: 'web.hook'
+  receiver: 'send_mails'
+  # routes:
+    # - receiver: 'send_mails'
+
+receivers:
+# - name: 'web.hook'
+  # webhook_configs:
+  # - url: 'http://127.0.0.1:5001/'
+
+- name: 'send_mails'
+  email_configs:
+  - to: 'rebraindev@gmail.com'
+    from: 'rebraindev@gmail.com'
+    smarthost: 'smtp.gmail.com:587'
+    auth_username: 'rebraindev@gmail.com'
+    auth_identity: 'rebraindev@gmail.com'
+    auth_secret: 'rebraindev@gmail.com'
+    auth_password: '470913827'
+    #    require_tls: false
+    send_resolved: true
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']

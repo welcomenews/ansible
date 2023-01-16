@@ -1,0 +1,12 @@
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=nogroup
+ExecStart=/opt/node_exporter-1.1.2/node_exporter
+
+[Install]
+WantedBy=default.target
