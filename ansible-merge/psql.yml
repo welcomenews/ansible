@@ -1,0 +1,5 @@
+---
+- hosts: databases
+  sudo: true
+  roles:
+    - psql
