@@ -1,5 +1,5 @@
 
-``
+```
 Install Postgresql
 
 - Debian-7
