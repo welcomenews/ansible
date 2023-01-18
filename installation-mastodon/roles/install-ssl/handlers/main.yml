@@ -1,0 +1,11 @@
+---
+- name: reload nginx
+  service:
+     name: nginx
+     state: reloaded
+  # notify: check state
+
+- name: check state
+  service:
+     name: nginx
+     state: started
