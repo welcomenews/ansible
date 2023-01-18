@@ -1,0 +1,38 @@
+---
+- name: Install nvm
+  shell: >
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+    creates=/root/.nvm/nvm.sh
+
+- name: Install Git VCS
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+
+- name: Git checkout
+  git:
+    repo: 'https://github.com/hubotio/hubot.git'
+    dest: /root/hubot
+    version: master
+
+- name: nvm install
+  shell: "source /root/.nvm/nvm.sh && nvm install v14.15.4"
+  args:
+    executable: /bin/bash
+
+- name: nvm use
+  shell: "source /root/.nvm/nvm.sh && nvm use v14.15.4"
+  args:
+    executable: /bin/bash
+
+- name: Export path nvm
+  replace:
+    dest: /etc/environment
+    regexp: '(.*)"$'
+    replace: '\1:/root/.nvm/versions/node/v14.15.4/bin"'
+
+- name: Update sh
+  shell:  "source /root/.bashrc"
+  args:
+      executable: /bin/bash
