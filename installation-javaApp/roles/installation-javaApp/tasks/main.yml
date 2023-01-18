@@ -1,0 +1,44 @@
+---
+- name: Install add-apt-repostory
+  apt:
+    name: software-properties-common
+    state: latest
+
+- name: Add Oracle Java Repository
+  apt_repository:
+    repo: 'ppa:webupd8team/java'
+
+- name: Accept Java 8 License
+  debconf:
+    name: 'oracle-java8-installer'
+    question: 'shared/accepted-oracle-license-v1-1'
+    value: 'true'
+    vtype: 'select'
+
+- name: Install Oracle Java 8
+  apt:
+    name: '{{item}}'
+    state: latest
+  with_items:
+    - openjdk-8-jre-headless
+    - ca-certificates
+
+- name: installing dependencies
+  shell: |
+     cd /root/tale/
+     ./install.sh
+
+- name:
+  shell: |
+     cd /root/tale/tale/
+     chmod a+x ./tool
+     ./tool start
+
+
+- name: Change config https nginx virtual_host
+  template:
+    src: devops.rebrain.srwx.net-http.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }}
+    owner: root
+    group: root
+    mode: '0644'
