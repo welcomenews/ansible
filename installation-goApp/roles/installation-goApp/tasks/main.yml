@@ -1,0 +1,34 @@
+---
+- name: Install packages
+  apt:
+    name: git
+    state: present
+
+- name: Download package Goland
+  get_url:
+    url: https://golang.org/dl/go1.15.7.linux-amd64.tar.gz
+    dest: /tmp/
+
+- name: Unzip package Goland
+  unarchive:
+    src: /tmp/go1.15.7.linux-amd64.tar.gz
+    dest: /usr/local
+    copy: no
+
+- name: Export path Goland
+  replace:
+    dest: /etc/environment
+    regexp: '(.*)"$'
+    replace: '\1:/usr/local/go/bin"'
+
+
+- name: Git checkout ethr-util
+  git:
+    repo: 'https://github.com/Microsoft/ethr.git'
+    dest: /root/ethr
+    version: master
+
+- name: Build go-app
+  shell: |
+     cd /root/ethr
+     go build
