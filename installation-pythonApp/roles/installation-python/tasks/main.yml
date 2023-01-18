@@ -1,0 +1,122 @@
+---
+- name: Install packages
+  apt:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - libpq-dev
+    - python-dev
+    - libffi-dev
+    - git
+    - make
+    - build-essential
+    - libssl-dev
+    - zlib1g-dev
+    - libbz2-dev
+    - libreadline-dev
+    - libsqlite3-dev
+    - wget
+    - curl
+    - llvm
+    - libncurses5-dev
+    - libncursesw5-dev
+    - xz-utils
+    - tk-dev
+    - liblzma-dev
+    - python-openssl
+    - postgresql-10
+
+
+- name: Update sh
+  shell:  "source /root/.bashrc"
+  args:
+      executable: /bin/bash
+
+- name: Git checkout pyenv
+  git:
+    repo: 'https://github.com/pyenv/pyenv.git'
+    dest: /root/.pyenv
+    version: master
+
+- name: Git checkout PythonApp
+  git:
+    repo: 'https://github.com/gothinkster/django-realworld-example-app.git'
+    dest: /root/django-realworld-example-app
+    version: master
+
+- name: Git checkout virtualenv
+  git:
+    repo: 'https://github.com/pyenv/pyenv-virtualenv.git'
+    dest: /root/.pyenv/plugins/pyenv-virtualenv
+    version: master
+
+
+- name: Install pyenv and virtualenv
+  shell: |
+     echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+     echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+     echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n eval "$(pyenv init -)"\nfi' >> ~/.bashrc
+     echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+     exec "$SHELL"
+
+
+- name: Update sh
+  shell:  "source /root/.bashrc"
+  args:
+      executable: /bin/bash
+
+- name: Pause for 15 seconds to build
+  pause:
+    seconds: 15
+
+- name: Install python
+  shell: pyenv install 3.7.1
+
+- name: Set pyenv global
+  shell: pyenv global 3.7.1
+
+
+- name: Set pyenv global
+  shell: |
+     cd /root/django-realworld-example-app
+     pyenv virtualenv 3.7.1 app
+     pyenv local app
+
+- name: install psycopg2
+  shell: pip install psycopg2
+
+- name: installation requirements
+  shell: pip install -r requirements.txt
+
+- name: set access on root dir
+  shell: chmod a+r /root/
+
+- name: Copy
+  copy:
+     src: settings.py
+     dest: /root/django-realworld-example-app/conduit
+     owner: root
+     group: root
+     mode: '0644'
+
+- name: Create folder static for css
+  file:
+    path: /root/django-realworld-example-app/static
+    state: directory
+    mode: 0755
+
+- name: copy files collectstatic
+  shell: yes |python manage.py collectstatic
+
+- name: installation uwsgi
+  shell: pip install uwsgi
+
+- name: Change config https nginx virtual_host
+  template:
+    src: devops.rebrain.srwx.net-http.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }}
+    owner: root
+    group: root
+    mode: '0644'
+
+
