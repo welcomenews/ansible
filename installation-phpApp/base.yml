@@ -1,0 +1,12 @@
+---
+- name: Install programs
+  hosts: all
+  become: yes
+  remote_user: root
+  gather_facts: yes
+
+  roles:
+    - nginx
+    - install-virtual-host
+    - installation-php
+    - install-ssl

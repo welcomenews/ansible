@@ -1,0 +1,91 @@
+---
+- name: Install MySQL DB server
+  apt:
+     name: mysql-server
+     state: present
+
+- name: Add PHP 7 PPA repository
+  apt_repository:
+     repo: 'ppa:ondrej/php'
+
+- name: Install required software
+  apt:
+     name: '{{ item }}'
+     state: present
+  loop:
+    - php7.2-cli
+    - php7.2-curl
+    - php7.2-fpm
+    - php7.2-intl
+    - php7.2-sqlite3
+    - php7.2-mbstring
+    - php7.2-xml
+    - php7.2-mysql
+    - php7.2-zip
+    - zip
+    - unzip
+    - build-essential
+    - python-dev
+    - libmysqlclient-dev
+    - python-mysqldb
+
+- name: Download Composer installer.
+  get_url:
+    url: https://getcomposer.org/installer
+    dest: /tmp/composer-installer.php
+    mode: 0755
+
+- name: Run Composer installer.
+  command: >
+    php composer-installer.php
+    chdir=/tmp
+    creates=/usr/local/bin/composer
+
+- name: Move Composer into globally-accessible location.
+  shell: >
+    mv /tmp/composer.phar /usr/local/bin/composer
+    creates=/usr/local/bin/composer
+
+- name: Install Git VCS
+  apt:
+    name: git
+    state: present
+
+- name: Git checkout
+  git:
+    repo: 'https://github.com/symfony/demo.git'
+    dest: /var/www/my_project
+    version: main
+
+- name: Installation requirements for demo
+  shell: |
+       cd /var/www/my_project
+       chmod 777 var/log/
+       yes |composer update
+
+- name: CREATE DATABASE
+  mysql_db:
+       name: api
+       state: present
+
+- name: Create MySql USER
+  mysql_user:
+     name: symfony
+     password: '123'
+     priv: '*.*:ALL'
+     state: present
+
+- name: Change base into file .env to MySql
+  copy:
+    src: change-env
+    dest: /var/www/my_project/.env
+    owner: root
+    group: root
+    mode: '0644'     
+
+- name: Migrate to Mysql
+  shell: |
+      cd /var/www/my_project
+      ./bin/console doctrine:schema:create
+      yes |./bin/console doctrine:fixtures:load
+
