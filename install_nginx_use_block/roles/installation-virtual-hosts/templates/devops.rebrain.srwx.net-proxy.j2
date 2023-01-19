@@ -1,0 +1,13 @@
+# server_tokens off;
+
+upstream backend {
+    server {{ domain_name1 }};
+}
+
+server {
+    listen 80 default_server;
+
+    location / {
+        proxy_pass http://backend;
+    }
+}

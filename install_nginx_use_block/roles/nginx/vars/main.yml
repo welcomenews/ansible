@@ -1,0 +1,2 @@
+sendfile_switch: "on"
+tcp_nopush_switch: "on"
