@@ -1,0 +1,254 @@
+---
+- hosts: all
+  sudo: true
+  - vars:
+    node_exporter_version: "0.15.2"
+    node_exporter_url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+    users:
+      - username: vozerov
+        ssh_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtCGJinXDwKlenUFSsGWisxaF0DcNiV8utVEmfka3se0CW2yNIr1vDCeJxPdAlxGG0O/28WLWuTArLiDsTJjYqN+VchXLAfQmCn+5A313RjZlJK0KSxgL8IP6Q68diUzuCKdisjhKIKISTCzfL7uTKE0JEsUsF7bfSYvOEBtYFLWD1XH4qmi6HeFpSsnr7EPVC7FZzFdOgpZ6Vm6fwS7ygdVLapm6SH1lkNm0Xnt3WjaPkZaWRcAmUxC0RWT36QNwbBKTVLaFbfuF4FBeuBm7cwt2a/nnQzpbk9lVkeZYhFxH/5Zi8Uv8LYYJwTBvYzXaceDdH2zSxYwltiCTaKiYl'
+        description: Vasily Ozerov
+        groups:
+          - sudo
+  - tasks:
+    - name: Install packages
+      apt:
+        name: auditd
+
+    - name: settings auditd
+      template:
+        src: auditd.conf.j2
+        dest: /etc/audit/auditd.conf
+        register: auditd_config
+
+    - name: rules auditd
+      template:
+        src: audit.rules.j2
+        dest: /etc/audit/rules.d/audit.rules
+        register: auditd_rules
+
+    - name: Restart auditd if rules changed
+      service:
+        name: auditd
+        state: restarted
+        when: auditd_rules.changed
+
+    - name: Restart auditd if config changed
+      service:
+        name: auditd
+        state: restarted
+        when: auditd_config.changed
+    - name: Disable Periodic Update-Package-Lists
+      lineinfile:
+        path: /etc/apt/apt.conf.d/20auto-upgrades
+        regexp: '^APT::Periodic::Update-Package-Lists "1";'
+        line: 'APT::Periodic::Update-Package-Lists "0";'
+        when: ansible_distribution == 'Ubuntu'
+        ignore_errors: yes
+
+    - name: Disable Periodic Unattended-Upgrade
+      lineinfile:
+        path: /etc/apt/apt.conf.d/20auto-upgrades
+        regexp: '^APT::Periodic::Unattended-Upgrade "1";'
+        line: 'APT::Periodic::Unattended-Upgrade "0";'
+        when: ansible_distribution == 'Ubuntu'
+        ignore_errors: yes
+
+    - name: Disable periodic enable
+      lineinfile:
+        path: /usr/lib/apt/apt.systemd.daily
+        regexp: '^APT::Periodic::Enable "1";'
+        line: 'APT::Periodic::Enable "0";'
+        when: ansible_distribution == 'Debian'
+        ignore_errors: yes
+
+    - name: Disable Update-Package-Lists
+      lineinfile:
+        path: /usr/lib/apt/apt.systemd.daily
+        regexp: 'APT::Periodic::Update-Package-Lists "1";'
+        line: 'APT::Periodic::Update-Package-Lists "0";'
+        when: ansible_distribution == 'Debian'
+        ignore_errors: yes
+
+    - name: Disable Update-Package-Lists
+      lineinfile:
+        path: /usr/lib/apt/apt.systemd.daily
+        regexp: 'APT::Periodic::Unattended-Upgrade "1";'
+        line: 'APT::Periodic::Unattended-Upgrade "0";'
+        when: ansible_distribution == 'Debian'
+        ignore_errors: yes
+
+    - name: Stop the systemd apt-daily.timer
+      service:
+        name: apt-daily.timer
+        state: stopped
+
+    - name: Disable the systemd apt-daily.timer
+      service:
+        name: apt-daily.timer
+        enabled: no
+
+    - name: Disable the systemd apt-daily.service
+      service:
+        name: apt-daily.service
+        state: stopped
+
+    - name: Disable the systemd apt-daily.service
+      service:
+        name: apt-daily.service
+        enabled: no
+
+    - name: Disable the systemd apt-daily-upgrade.service
+      service:
+        name: apt-daily.service
+        state: stopped
+
+    - name: Disable the systemd apt-daily-upgrade.service
+      service:
+        name: apt-daily.service
+        enabled: no
+
+    - name: Disable the systemd apt-daily-upgrade.timer
+      service:
+        name: apt-daily-upgrade.timer
+        state: stopped
+
+    - name: Disable the systemd apt-daily-upgrade.timer
+      service:
+        name: apt-daily-upgrade.timer
+        enabled: no
+
+    - name: Get node_exporter archive
+      get_url:
+        url: "{{ node_exporter_url }}"
+        dest: "/opt/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+
+    - name: Unarchive archive
+      unarchive:
+        src: "/opt/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: /opt/
+        remote_src: yes
+
+    - name: Make link from binary to system path
+      file:
+        src: "/opt/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+        dest: /usr/local/bin/node_exporter
+        mode: 0755
+        state: link
+
+    - name: Create dir for text exporting
+      file:
+        path: /etc/prometheus/text_exporter
+        state: directory
+        owner: root
+        group: root
+        mode: 0777
+
+    - name: Create service file
+      copy:
+        src: node_exporter.service
+        dest: "/etc/systemd/system/node_exporter.service"
+
+    - name: Ensure that services are running
+      service: 
+        name: "node_exporter"
+        state: started
+        enabled: yes
+
+    - name: /etc/security/limits.conf file
+      copy:
+        src: security/limits.conf
+        dest: /etc/security/limits.conf
+        mode: 0644
+        sudo: true
+
+    - name: Setting motd update network script
+      copy:
+        src: motd-network.sh
+        dest: /etc/update-motd.d/92-network
+        mode: 0744
+        sudo: true
+
+    - name: Install packages
+      environment:
+        PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin'
+        apt:
+          name: "{{ item }}"
+          loop:
+            - apt-transport-https
+            - nano
+            - curl
+            - telnet
+            - screen
+            - wget
+            - tcpdump
+            - vim
+            - htop
+            - iotop
+            - iftop
+            - git
+            - lsof
+            - psmisc
+            - bash-completion
+            - apt-show-versions
+            - unzip
+            - sysstat
+            - postgresql-client
+            - systemd-coredump
+            - ntp
+            - sudo
+            - openssh-server
+            - python3-pip
+            - gpg-agent
+            - net-tools
+
+    - name: Sshd config
+      copy:
+        src: sshd_config
+        dest: /etc/ssh/sshd_config
+        mode: 0644
+        sudo: true
+        register: ssh_config
+
+    - name: Reload sshd service
+      service:
+        name: ssh
+        state: reloaded
+        when: ssh_config.changed
+
+    - name: settings sysctl
+      template:
+        src: sysctl.conf.j2
+        dest: /etc/sysctl.conf
+        register: sysctl_config
+
+    - name: Restart sysctl if config changed
+      command: sysctl -p
+      when: sysctl_config.changed- name: Set timezone to UTC
+      timezone:
+        name: UTC
+
+    - name: "Generate en_US.UTF-8 default locale"
+      locale_gen:
+        name: en_US.UTF-8
+        state: present
+
+    - name: "Generate ru_RU.UTF-8 default locale"
+      locale_gen:
+        name: ru_RU.UTF-8
+        state: present# Add user, set ssh-key, common info + sudo group if flag added
+
+    - name: Adding user
+      user:
+        name={{ item.username }}
+        groups={{ item.groups }}
+        createhome=yes
+        shell=/bin/bash
+        comment={{ item.description }}
+      with_items: '{{ users }}'
+
+    - name: Setting ssh authorized_keys for every user
+      authorized_key:
+          user={{ item.username }}
+          key='{{ item.ssh_key }}'
+      with_items: '{{ users }}'

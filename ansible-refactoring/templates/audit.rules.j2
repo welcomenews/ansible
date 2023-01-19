@@ -1,0 +1,25 @@
+-D
+-b 320
+-f 1 
+--backlog_wait_time 0
+-w /etc -p wa
+-w /var/log/audit/
+-w /var/log/audit/audit.log
+-w /var/spool/ -p wa
+-w /etc/shadow -p wa
+-w /etc/securetty
+-w /var/log/faillog
+-w /var/log/lastlog
+-w /etc/hosts -p wa
+-w /etc/init.d/
+-w /etc/ld.so.conf.d
+-w /etc/modprobe.d/
+-w /etc/pam.d/
+-w /etc/ssh/sshd_config
+-e 2
+-a exit,always -F arch=b64 -S chmod -S chown
+-a exit,always -F arch=b32 -S chmod -S chown
+-a exit,always -F arch=b64 -S mkdir -S rmdir
+-a exit,always -F arch=b32 -S mkdir -S rmdir
+-a exit,always -F arch=b64 -S mount -S umount
+-a never,always -F arch=b64 -S open -F loginuid=0

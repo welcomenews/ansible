@@ -1,0 +1,14 @@
+# Managed by Ansible 
+[Unit]
+Description=Node metrics exporter
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/node_exporter --collector.systemd --collector.logind --collector.mountstats --collector.textfile.directory=/etc/prometheus/text_exporter
+KillMode=process
+TimeoutSec=10
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
