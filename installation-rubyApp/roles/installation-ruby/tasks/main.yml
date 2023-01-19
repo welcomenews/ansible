@@ -1,0 +1,110 @@
+---
+- name: Install packages
+  apt:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - libpq-dev
+    - nodejs
+    - git
+    - postgresql-10
+
+
+
+- name: Update sh
+  shell:  "source /root/.bashrc"
+  args:
+      executable: /bin/bash
+
+- name: Git checkout
+  git:
+    repo: 'https://github.com/1sherlynn/alphacamp_blog_app.git'
+    dest: /root/alphacamp_blog_app
+    version: master
+
+- name: Install rvm
+  shell: |
+     gpg2 --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+     \curl -sSL https://get.rvm.io | bash -s stable
+
+- name: Export path gem
+  replace:
+    dest: /etc/environment
+    regexp: '(.*)"$'
+    replace: '\1:/usr/local/rvm/bin"'
+
+- name: Update sh
+  shell:  "source /root/.bashrc"
+  args:
+      executable: /bin/bash
+
+- name: Pause for 15 seconds to build
+  pause:
+    seconds: 15
+
+- name: Install ruby
+  # command: rvm install ruby-2.4.1
+  shell: "source /usr/local/rvm/bin/rvm && rvm install ruby-2.4.1"
+  args:
+    executable: /bin/bash
+
+- name: Use ruby-2.4.1
+  # command: rvm use ruby-2.4.1
+  shell: "source /usr/local/rvm/bin/rvm && rvm use ruby-2.4.1"
+  args:
+    executable: /bin/bash
+
+- name: Export path gem
+  replace:
+    dest: /etc/environment
+    regexp: '(.*)"$'
+    replace: '\1:/usr/local/rvm/rubies/ruby-2.4.1/bin"'
+
+- name: Update sh
+  shell:  "source /root/.bashrc"
+  args:
+      executable: /bin/bash
+
+- name: Pause for 15 seconds to build
+  pause:
+    seconds: 25
+
+- name: Install bundle
+  # command: gem install bundle
+  shell: "source /usr/local/rvm/bin/rvm && gem install bundle"
+  args:
+    executable: /bin/bash
+
+
+- name: RAILS_ENV
+  shell: RAILS_ENV=production rails assets:precompile
+
+ - name: Copy
+  copy:
+    src: '{{ item.src }}'
+    dest: '/root/alphacamp_blog_app/{{ item.dest }}'
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - { src: database.yml, dest: config/database.yml }
+    - { src: students.rb, dest: spec/factories/students.rb }
+
+- name: bundle install
+  shell: |
+    cd alphacamp_blog_app
+    bundle install
+
+- name: Migrate
+  shell: |
+    cd alphacamp_blog_app
+    bundle exec rake db:migrate
+
+- name: Change config https nginx virtual_host
+  template:
+    src: devops.rebrain.srwx.net-http.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }}
+    owner: root
+    group: root
+    mode: '0644'
+
