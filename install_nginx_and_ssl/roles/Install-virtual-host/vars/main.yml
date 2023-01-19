@@ -1,0 +1,6 @@
+sendfile_switch: "on"
+tcp_nopush_switch: "on"
+set_params: ['tcp_nodelay on;', 'keepalive_timeout 65;', 'types_hash_max_size 2048;']
+
+letsencrypt_email: "welcome-news@mail.ru"
+domain_name: "welcome-news.devops.rebrain.srwx.net"

@@ -1,0 +1,27 @@
+server_tokens off;
+
+server {
+    server_name {{ domain_name }};
+    index index.php index.html index.htm index.nginx-debian.html;
+
+    location / {
+        root /var/www/html;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain_name }}/privkey.pem;
+}
+
+server {
+
+
+    listen 80 default_server;
+    index index.php index.html index.htm index.nginx-debian.html;
+    server_name {{ domain_name }};
+
+    location / {
+        rewrite ^ https://{{ domain_name }}$request_uri? permanent;
+    }
+
+}
