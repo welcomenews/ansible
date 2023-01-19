@@ -1,0 +1,53 @@
+---
+- name: Create folders for enginx
+  file:
+    path: '/etc/nginx/{{ item }}'
+    state: directory
+    mode: 0755
+  loop:
+    - sites-available
+    - sites-enabled
+
+- name: Remove default configuration
+  file:
+    path: '/etc/nginx/{{ item }}'
+    state: absent
+  loop:
+    - sites-available/default
+    - sites-enabled/default
+
+- name: Copy index.html for virtual_host
+  copy:
+    src: devops.rebrain.srwx.net
+    dest: /var/www/html/index.html
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload nginx
+    - check state
+
+- name: Copy config https nginx virtual_host
+  # copy:
+  template:
+    src: devops.rebrain.srwx.net-http.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }}
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload nginx
+    - check state
+
+- name: Create simbolic link
+  file:
+    src: /etc/nginx/sites-available/{{ domain_name }}
+    dest: /etc/nginx/sites-enabled/{{ domain_name }}
+    owner: root
+    group: root
+    force: yes
+    mode: 0644
+    state: link
+  notify:
+    - reload nginx
+    - check state

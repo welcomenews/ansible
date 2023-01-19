@@ -1,0 +1,5 @@
+webroot_path: "/var/www/nodejs.org/build"
+certbot_package: "python3-certbot-nginx"
+certbot_plugin: "webroot"
+certbot_mail_address: "welcome-news@mail.ru"
+domain_name: "welcome-news.devops.rebrain.srwx.net"

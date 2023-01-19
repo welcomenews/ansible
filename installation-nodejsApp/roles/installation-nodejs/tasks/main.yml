@@ -1,0 +1,71 @@
+---
+- name: Install nvm
+  shell: >
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+    creates=/root/.nvm/nvm.sh
+
+# После этой команды ломается Python
+# - name: install node
+#   shell: |
+#     curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && sudo apt-get install -y nodejs
+
+
+- name: Install Git VCS
+  apt:
+    name: git
+    state: present
+
+- name: Git checkout
+  git:
+    repo: 'https://github.com/nodejs/nodejs.org.git'
+    dest: /var/www/nodejs.org
+    version: master
+
+- name: nvm install
+  shell: "source /root/.nvm/nvm.sh && nvm install v14.15.4"
+  args:
+    executable: /bin/bash
+
+- name: nvm use
+  shell: "source /root/.nvm/nvm.sh && nvm use v14.15.4"
+  args:
+    executable: /bin/bash
+
+- name: Export path nvm
+  replace:
+    dest: /etc/environment
+    regexp: '(.*)"$'
+    replace: '\1:/root/.nvm/versions/node/v14.15.4/bin"'
+
+- name: Update sh
+  shell:  "source /root/.bashrc"
+  args:
+      executable: /bin/bash
+
+- name: Pause for 15 seconds to build
+  pause:
+    seconds: 15
+
+- name: Update packages based on package.json to their latest version(npm install).
+  npm:
+    path: /var/www/nodejs.org
+    state: latest
+
+- name: Create folder Build
+  file:
+    path: /var/www/nodejs.org/build
+    state: directory
+    mode: 0755
+
+- name: Build npm
+  shell: |
+     cd /var/www/nodejs.org
+     /root/.nvm/versions/node/v14.15.4/bin/npm run build
+
+- name: Change config https nginx virtual_host
+  template:
+    src: devops.rebrain.srwx.net-http.j2
+    dest: /etc/nginx/sites-available/{{ domain_name }}
+    owner: root
+    group: root
+    mode: '0644'

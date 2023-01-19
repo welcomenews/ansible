@@ -1,0 +1,15 @@
+---
+- name: Install programs
+  hosts: all
+  become: yes
+  remote_user: root
+  gather_facts: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+  roles:
+    - nginx
+    - install-virtual-host
+    - installation-nodejs
+    - install-ssl
+

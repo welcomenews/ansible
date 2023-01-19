@@ -1,0 +1,26 @@
+server_tokens off;
+
+server {
+    server_name welcome-news.devops.rebrain.srwx.net;
+    index index.php index.html index.htm index.nginx-debian.html;
+
+    location / {
+        root /var/www/nodejs.org/build;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/welcome-news.devops.rebrain.srwx.net/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/welcome-news.devops.rebrain.srwx.net/privkey.pem;
+}
+
+server {
+
+
+    listen 80 default_server;
+    server_name welcome-news.devops.rebrain.srwx.net;
+
+    location / {
+        rewrite ^ https://welcome-news.devops.rebrain.srwx.net$request_uri? permanent;
+    }
+
+}
