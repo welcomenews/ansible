@@ -1,0 +1,8 @@
+701 No 'galaxy_info' found
+/home/sergey/terraform/less-ans10/roles/installation-virtual-hosts/meta/main.yml:2
+{'meta/main.yml': {'dependencies': [{'role': 'nginx', '__line__': 3, '__file__': '/home/sergey/terraform/less-ans10/roles/installation-virtual-hosts/meta/main.yml'}], '__line__': 2, '__file__': '/home/sergey/terraform/less-ans10/roles/installation-virtual-hosts/meta/main.yml', 'skipped_rules': []}}
+
+201 Trailing whitespace
+/home/sergey/terraform/less-ans10/roles/installation-virtual-hosts/meta/main.yml:4
+  
+

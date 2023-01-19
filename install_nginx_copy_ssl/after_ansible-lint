@@ -1,0 +1,6 @@
+Examining nginx.yml of type playbook
+Examining roles/installation-virtual-hosts/tasks/main.yml of type tasks
+Examining roles/installation-virtual-hosts/handlers/main.yml of type handlers
+Examining roles/installation-virtual-hosts/meta/main.yml of type meta
+Examining roles/nginx/tasks/main.yml of type tasks
+Examining roles/nginx/handlers/main.yml of type handlers
