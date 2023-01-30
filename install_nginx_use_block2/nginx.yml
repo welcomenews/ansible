@@ -1,0 +1,10 @@
+---
+- name: Install programs
+  hosts: all
+  become: yes
+  remote_user: root
+  gather_facts: yes
+
+  roles:
+   - nginx
+   - Installation-virtual-hosts

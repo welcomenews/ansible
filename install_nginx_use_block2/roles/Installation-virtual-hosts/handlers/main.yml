@@ -1,0 +1,10 @@
+---
+- name: reload nginx
+  service:
+      name: nginx
+      state: reloaded
+
+- name: nginx-centOS
+  service:
+      name: nginx
+      state: reloaded
