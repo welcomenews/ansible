@@ -1,0 +1,2 @@
+[servers]
+node1 ansible_host=46.101.98.242

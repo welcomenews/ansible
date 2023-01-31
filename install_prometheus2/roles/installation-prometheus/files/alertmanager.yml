@@ -1,0 +1,39 @@
+global:
+  resolve_timeout: 1m
+  smtp_from: 'smtpopenvpn@gmail.com'
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_auth_username: 'smtpopenvpn@gmail.com'
+  smtp_auth_password: '470913827'
+
+route:
+  group_by: ['alertname', 'instance']
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  # receiver: 'web.hook'
+  receiver: 'send_mails'
+  # routes:
+    # - receiver: 'send_mails'
+
+receivers:
+# - name: 'web.hook'
+  # webhook_configs:
+  # - url: 'http://127.0.0.1:5001/'
+
+- name: 'send_mails'
+  email_configs:
+  - to: 'smtpopenvpn@gmail.com'
+    #    from: smtpopenvpn@gmail.com
+    #    smarthost: smtp.gmail.com:587
+    #    auth_username: "smtpopenvpn@gmail.com"
+    #    auth_identity: "smtpopenvpn@gmail.com"
+    #    auth_password: "70913827"
+    require_tls: false
+    send_resolved: true
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']

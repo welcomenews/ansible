@@ -1,0 +1,89 @@
+---
+- name: Install add-apt-repostory
+  apt:
+    name: "{{ item }}"
+    state: latest
+  loop:
+    - curl
+    - git-core
+    - nginx
+    - certbot
+    - wget
+  when: ansible_pkg_mgr == "apt"
+
+- name: Add users
+  user:
+    name: "{{ item }}"
+    shell: /usr/sbin/nologin
+    system: True
+    create_home: False
+    state: present
+  loop:
+    - "prometheus"
+    - "node_exporter"
+    - "alertmanager"
+
+- name: Download and install prometheus
+  shell: |
+    cd /opt
+    wget https://github.com/prometheus/prometheus/releases/download/v2.27.1/prometheus-2.27.1.linux-amd64.tar.gz
+    tar zxvf prometheus-*.tar.gz
+    rm prometheus-*.tar.gz
+    mv prometheus-* prometheus2
+    mkdir /var/lib/prometheus
+    chown -R prometheus:prometheus /opt/prometheus2 /var/lib/prometheus
+
+- name: Download and install node_exporter
+  shell: |
+    cd /opt
+    wget https://github.com/prometheus/node_exporter/releases/download/v1.1.2/node_exporter-1.1.2.linux-amd64.tar.gz
+    tar zxvf node_exporter-*.tar.gz
+    rm node_exporter-*.tar.gz
+    mv node_exporter-* node_exporter-1.1.2
+    chown -R node_exporter:node_exporter /opt/node_exporter-1.1.2
+
+- name: Download and install alertmanager
+  shell: |
+    cd /opt
+    wget https://github.com/prometheus/alertmanager/releases/download/v0.22.2/alertmanager-0.22.2.linux-amd64.tar.gz
+    tar zxvf alertmanager-*.tar.gz
+    rm alertmanager-*.tar.gz
+    mv alertmanager-* alertmanager
+    mkdir /var/lib/prometheus/alertmanager
+    chown -R alertmanager:alertmanager /opt/alertmanager /var/lib/prometheus/alertmanager
+
+- name: Copy services
+  copy:
+    src: "{{ item }}"
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - "prometheus-alertmanager.service"
+    - "node_exporter.service"
+    - "prometheus.service"
+
+- name: Copy files
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest}}"
+    owner: prometheus
+    group: prometheus
+    mode: '0644'
+  loop:
+    - { src: alerts.yml, dest: /opt/prometheus2 }
+    - { src: prometheus.yml, dest: /opt/prometheus2 }
+    - { src: alertmanager.yml, dest: /opt/alertmanager }
+    - { src: targets.json, dest: /opt/prometheus2 }
+
+- name: Enable services
+  shell: |
+    systemctl daemon-reload
+    sleep 2
+    systemctl enable prometheus.service
+    systemctl enable node_exporter.service
+    systemctl enable prometheus-alertmanager.service
+    systemctl start prometheus.service
+    systemctl start node_exporter.service
+    systemctl start prometheus-alertmanager.service
