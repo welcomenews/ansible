@@ -1,0 +1,3 @@
+[instances]
+pc-1 ansible_host=192.168.1.96 ansible_ssh_user=sergey
+pc-2 ansible_host=192.168.1.97 ansible_ssh_user=sergey

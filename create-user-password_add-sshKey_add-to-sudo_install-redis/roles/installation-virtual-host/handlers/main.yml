@@ -1,0 +1,17 @@
+---
+
+- name: check config
+  shell: nginx -t
+  changed_when: True
+  notify: reload nginx
+
+- name: reload nginx
+  service:
+     name: nginx
+     state: reloaded
+
+- name: check state
+  service:
+     name: nginx
+     state: started
+

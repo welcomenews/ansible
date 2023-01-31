@@ -1,0 +1,45 @@
+---
+- name: Deny connect with password
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '#PasswordAuthentication yes'
+    line: 'PasswordAuthentication no'
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Deny connect root
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item }}"
+    line: 'PermitRootLogin prohibit-password'
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - 'PermitRootLogin no'
+    - '#PermitRootLogin no'
+    - '#PermitRootLogin prohibit-password'
+
+- name: Restart service.
+  service:
+    name: ssh
+    state: restarted
+
+- name: Ansible facts print IP address
+  debug:
+    msg: "IP={{ ansible_all_ipv4_addresses }}"
+  tags: print
+
+- name: Generation uname
+  shell: uname -a
+  register: uname
+  run_once: yes
+  tags: print
+
+- name: Print uname
+  debug:
+    msg: "uname = {{ uname.stdout }}"
+  tags: print
+
+
