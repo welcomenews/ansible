@@ -1,6 +1,13 @@
 ## ansible
 
 ```
+## How to install SSH server in Ubuntu
+
+Type command:
+
+sudo apt-get install openssh-server
+
+
 # Встроенная проверка 
 
 ## Проверка синтаксиса файла reactjs_playbook.yml
