@@ -1,0 +1,35 @@
+---
+- name: === Copy files ===
+  copy:
+    src: logstash-8.11.0-amd64.deb
+    dest: /tmp/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Check elastic
+  shell: systemctl status logstash.service
+  register: elasticsearch_service
+
+- name: Install elastic
+ shell: |
+    cd /tmp
+    dpkg -i logstash-8.11.0-amd64.deb
+
+- name: Creat dir for certs
+  shell: |
+    cp -R /etc/elasticsearch/certs /etc/logstash
+    chown -R root:logstash /etc/logstash/certs
+
+- name: Copy config files
+  copy:
+    src: "{{ item }}"
+    dest: /etc/logstash/conf.d/
+    owner: root
+    group: logstash
+    mode: '0644'
+  loop:
+    - input.conf
+    - output.conf
+    - filter.conf
+

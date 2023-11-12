@@ -1,0 +1,26 @@
+---
+- name: === Copy files ===
+  copy:
+    src: filebeat-8.11.0-amd64.deb
+    dest: /tmp/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Check elastic
+  shell: systemctl status filebeat.service
+  register: filebeat_service
+
+- name: Install elastic
+ shell: |
+    cd /tmp
+    dpkg -i filebeat-8.11.0-amd64.deb
+
+- name: Copy config files
+  copy:
+    src: filebeat.yml
+    dest: /etc/filebeat/
+    owner: root
+    group: root 
+    mode: '0644'
+

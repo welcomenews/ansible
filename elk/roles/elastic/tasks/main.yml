@@ -1,0 +1,94 @@
+---
+- name: Install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - apt-transport-https
+#    - libsemanage-python
+#    - java-1.8.0-openjdk-headless
+
+- name: === Copy files ===
+  copy:
+    src: "{{ item  }}"
+    dest: /tmp/
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - elasticsearch-8.11.0-amd64.deb
+    - filebeat-8.11.0-amd64.deb
+    - kibana-8.11.0-amd64.deb
+    - logstash-8.11.0-amd64.deb
+
+- name: Check elastic
+  shell: systemctl status elasticsearch.service
+  register: elasticsearch_service
+
+#- name: Install elastic
+# shell: |
+#    cd /tmp
+#    dpkg -i elasticsearch-8.11.0-amd64.deb
+#    dpkg -i logstash-8.11.0-amd64.deb
+#    dpkg -i kibana-8.11.0-amd64.deb
+#    dpkg -i filebeat-8.11.0-amd64.deb
+
+- name: Install elasticsearch plugins
+  command: "bin/elasticsearch-plugin install {{ item }}"
+  args:
+    chdir: /usr/share/elasticsearch/
+  register: install_plugins_out
+  changed_when: "'already exists' not in install_plugins_out.stdout"
+  failed_when: false
+  with_items: 
+    - ingest-user-agent
+    - ingest-geoip
+#  notify:
+#    - restart elasticsearch
+
+
+- name: Check if system memory is greater than 64G
+  debug: msg="System memory is {{ansible_memory_mb.real.total | int}} so setting heapsize to 32G upper limit"
+  when: ansible_memory_mb.real.total|int >= 65536
+  become: true
+
+- name: Apply heapsize start tuning for systems with greater than 64G memory
+  lineinfile:
+    path=/etc/elasticsearch/jvm.options
+    regexp='^## -Xms4g'
+    line='-Xms31g'
+  when: ansible_memory_mb.real.total|int >= 65536
+  become: true
+
+- name: Apply heapsize end tuning for systems with greater than 64G memory
+  lineinfile:
+    path=/etc/elasticsearch/jvm.options
+    regexp='^## -Xmx4g'
+    line='-Xmx31g'
+  when: ansible_memory_mb.real.total|int >= 65536
+  register: elasticsearch_updated
+  become: true
+
+- name: Print extended documentation for heapsize tuning
+  debug: msg="Refer to https://www.elastic.co/guide/en/elasticsearch/guide/current/_limiting_memory_usage.html"
+  when: ansible_memory_mb.real.total|int >= 65536
+  become: true
+
+- name: Update elasticsearch startup with start heap size
+  become: true
+  lineinfile:
+    path=/etc/elasticsearch/jvm.options
+    regexp='^## -Xms4g'
+    line='-Xms{{ (ansible_memory_mb.real.total / 2) | int }}m'
+  when: ansible_memory_mb.real.total|int < 65536
+
+- name: Update elasticsearch startup with end heap size
+  become: true
+  lineinfile:
+    path=/etc/elasticsearch/jvm.options
+    regexp='^## -Xmx4g'
+    line='-Xmx{{ (ansible_memory_mb.real.total / 2) | int }}m'
+  when: ansible_memory_mb.real.total|int < 65536
+  register: elasticsearch_updated
+
+
