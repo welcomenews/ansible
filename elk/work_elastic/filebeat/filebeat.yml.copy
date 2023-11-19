@@ -1,0 +1,32 @@
+#filebeat.inputs:
+#- type: syslog
+#  enabled: true
+#  paths:
+#      - /var/log/nginx/*-access.log
+#      - /var/log/syslog
+#  fields:
+#    type: message
+#  fields_under_root: true
+#  scan_frequency: 15s
+
+#- type: log
+#  enabled: false
+#  paths:
+#      - /var/log/nginx/*-error.log
+#  fields:
+#    type: nginx_error
+#  fields_under_root: true
+#  scan_frequency: 5s
+
+filebeat.config.modules:
+  enabled: true
+  path: /etc/filebeat/modules.d/*.yml
+  reload.enabled: true
+
+output.logstash:
+  hosts: ["127.0.0.1:5044"]
+
+xpack.monitoring:
+  enabled: true
+  elasticsearch:
+    hosts: ["http://127.0.0.1:9200"]
