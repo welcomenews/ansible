@@ -16,7 +16,7 @@
     cd /tmp
     dpkg -i filebeat-8.11.0-amd64.deb
 
-- name: Copy config files
+- name: Copy config file
   copy:
     src: filebeat.yml
     dest: /etc/filebeat/
@@ -24,3 +24,16 @@
     group: root 
     mode: '0644'
 
+- name: Copy modules file
+  copy:
+    src: system.yml
+    dest: /etc/filebeat/modules.d/
+    owner: root
+    group: root 
+    mode: '0644'
+
+- name: Start or restart filebeat service
+  command: systemctl start filebeat.service
+  ignore_errors: true
+  become: true
+  
