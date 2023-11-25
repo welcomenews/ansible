@@ -29,12 +29,20 @@
     - output.conf
     - filter.conf
 
+- name: Copy GeoLite2 file
+  copy:
+    src: GeoLite2-City.mmdb
+    dest: /etc/logstash/
+    owner: root
+    group: logstash
+
+
 - name: Start or restart logstash service
   command: systemctl start logstash.service
   ignore_errors: true
   become: true
 
-#- name: Check elastic
+#- name: Check logstash
 #  shell: systemctl status logstash.service
-#  register: elasticsearch_service
+#  register: logstash_service
   
