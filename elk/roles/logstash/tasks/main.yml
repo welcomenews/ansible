@@ -1,20 +1,16 @@
 ---
 - name: === Copy files ===
   copy:
-    src: logstash-8.11.0-amd64.deb
+    src: logstash-8.11.1-amd64.deb
     dest: /tmp/
     owner: root
     group: root
     mode: '0644'
 
-- name: Check elastic
-  shell: systemctl status logstash.service
-  register: elasticsearch_service
-
-- name: Install elastic
+- name: Install logstash
  shell: |
     cd /tmp
-    dpkg -i logstash-8.11.0-amd64.deb
+    dpkg -i logstash-8.11.1-amd64.deb
 
 - name: Creat dir for certs
   shell: |
@@ -33,3 +29,12 @@
     - output.conf
     - filter.conf
 
+- name: Start or restart logstash service
+  command: systemctl start logstash.service
+  ignore_errors: true
+  become: true
+
+#- name: Check elastic
+#  shell: systemctl status logstash.service
+#  register: elasticsearch_service
+  
