@@ -1,0 +1,31 @@
+---
+- name: === Copy files ===
+  copy:
+    src: kibana-8.11.0-amd64.deb
+    dest: /tmp/
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install elastic
+  shell: |
+    cd /tmp
+    dpkg -i kibana-8.11.0-amd64.deb
+ 
+- name: Copy config files
+  copy:
+    src: kibana.yml
+    dest: /etc/kibana/
+    owner: root
+    group: kibana
+    mode: '0644'
+
+- name: Start or restart kibana service
+  command: systemctl start kibana.service
+  ignore_errors: true
+  become: true
+
+# - name: Check kibana
+#   shell: systemctl status logstash.service
+#   register: kibana_service
+#   ignore_errors: true
