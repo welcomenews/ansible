@@ -1,6 +1,6 @@
 filebeat.inputs:
 - type: log
-  enabled: true
+  enabled: false
   paths:
       - /var/log/nginx/*-access.log
   fields:
@@ -9,7 +9,7 @@ filebeat.inputs:
   scan_frequency: 5s
 
 - type: log
-  enabled: true
+  enabled: false
   paths:
       - /var/log/nginx/*-error.log
   fields:
@@ -21,6 +21,25 @@ output.logstash:
   hosts: ["127.0.0.1:5044"]
 
 xpack.monitoring:
-  enabled: true
+  enabled: false
   elasticsearch:
     hosts: ["http://127.0.0.1:9200"]
+
+# ============================== Filebeat modules ==============================
+
+filebeat.config.modules:
+  # Glob pattern for configuration loading
+  path: ${path.config}/modules.d/*.yml
+
+  # Set to true to enable config reloading
+  reload.enabled: true
+
+  # Period on which files under path should be checked for changes
+  #reload.period: 10s
+
+# ======================= Elasticsearch template setting =======================
+
+setup.template.settings:
+  index.number_of_shards: 1
+  #index.codec: best_compression
+  #_source.enabled: false
