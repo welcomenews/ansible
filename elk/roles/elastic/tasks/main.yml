@@ -10,28 +10,24 @@
 
 - name: === Copy files ===
   copy:
-    src: "{{ item  }}"
+    src: elasticsearch-8.11.0-amd64.deb
     dest: /tmp/
     owner: root
     group: root
     mode: '0644'
-  loop:
-    - elasticsearch-8.11.0-amd64.deb
-    - filebeat-8.11.0-amd64.deb
-    - kibana-8.11.0-amd64.deb
-    - logstash-8.11.0-amd64.deb
 
-- name: Check elastic
-  shell: systemctl status elasticsearch.service
-  register: elasticsearch_service
+- name: Install elastic
+ shell: |
+    cd /tmp
+    dpkg -i elasticsearch-8.11.0-amd64.deb
 
-#- name: Install elastic
-# shell: |
-#    cd /tmp
-#    dpkg -i elasticsearch-8.11.0-amd64.deb
-#    dpkg -i logstash-8.11.0-amd64.deb
-#    dpkg -i kibana-8.11.0-amd64.deb
-#    dpkg -i filebeat-8.11.0-amd64.deb
+- name: Copy config files
+  copy:
+    src: elasticsearch.yml
+    dest: /etc/elasticsearch/
+    owner: root
+    group: elasticsearch
+    mode: '0644'
 
 - name: Install elasticsearch plugins
   command: "bin/elasticsearch-plugin install {{ item }}"
@@ -45,7 +41,6 @@
     - ingest-geoip
 #  notify:
 #    - restart elasticsearch
-
 
 - name: Check if system memory is greater than 64G
   debug: msg="System memory is {{ansible_memory_mb.real.total | int}} so setting heapsize to 32G upper limit"
@@ -91,4 +86,16 @@
   when: ansible_memory_mb.real.total|int < 65536
   register: elasticsearch_updated
 
+- name: Start or restart elasticsearch service
+  command: systemctl restart elasticsearch.service
+  ignore_errors: true
+  when: elasticsearch_updated != 0
+  become: true
 
+- name: Setup elasticsearch service to autostart
+  service: name=elasticsearch state=started enabled=true
+  become: true
+
+# - name: Check elastic
+#   shell: systemctl status elasticsearch.service
+#   register: elasticsearch_service
