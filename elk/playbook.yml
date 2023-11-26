@@ -7,4 +7,6 @@
 
   roles:
     - elastic
-
+    - logstash
+    - filebeat
+    - kibana
