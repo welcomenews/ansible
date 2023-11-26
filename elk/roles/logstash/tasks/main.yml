@@ -35,7 +35,7 @@
     dest: /etc/logstash/
     owner: root
     group: logstash
-
+    mode: '0644'
 
 - name: Start or restart logstash service
   command: systemctl start logstash.service
