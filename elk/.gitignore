@@ -1,0 +1,4 @@
+roles/elastic/files/elasticsearch-8.11.0-amd64.deb
+roles/filebeat/files/filebeat-8.11.0-amd64.deb
+roles/kibana/files/kibana-8.11.0-amd64.deb
+roles/logstash/files/logstash-8.11.1-amd64.deb
