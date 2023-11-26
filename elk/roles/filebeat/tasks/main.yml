@@ -8,7 +8,7 @@
     mode: '0644'
 
 - name: Install filebeat
- shell: |
+  shell: |
     cd /tmp
     dpkg -i filebeat-8.11.0-amd64.deb
 
