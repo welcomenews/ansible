@@ -7,7 +7,7 @@
     group: root
     mode: '0644'
 
-- name: Install elastic
+- name: Install kibana
   shell: |
     cd /tmp
     dpkg -i kibana-8.11.0-amd64.deb
@@ -26,6 +26,6 @@
   become: true
 
 # - name: Check kibana
-#   shell: systemctl status logstash.service
+#   shell: systemctl status kibana.service
 #   register: kibana_service
 #   ignore_errors: true
