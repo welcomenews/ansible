@@ -7,11 +7,7 @@
     group: root
     mode: '0644'
 
-- name: Check elastic
-  shell: systemctl status filebeat.service
-  register: filebeat_service
-
-- name: Install elastic
+- name: Install filebeat
  shell: |
     cd /tmp
     dpkg -i filebeat-8.11.0-amd64.deb
@@ -37,3 +33,6 @@
   ignore_errors: true
   become: true
   
+# - name: Check filebeat
+#   shell: systemctl status filebeat.service
+#   register: filebeat_service
