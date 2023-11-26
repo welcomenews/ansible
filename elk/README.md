@@ -36,7 +36,7 @@ Password for the [kibana_system] user successfully reset.
 New value: d4k6cg4Ul5+W8O-_Yj*N
 ```
 
-### Проверить конфигурацию Logstash можно командой:
+#### Проверить конфигурацию Logstash можно командой:
 ```
 sudo /usr/share/logstash/bin/logstash --path.settings /etc/logstash -t
 Мы должны увидеть:
@@ -45,19 +45,19 @@ Configuration OK
 ```
 https://www.dmosk.ru/instruktions.php?object=elk-ubuntu#logstash
 
-### Смотреть журнал например filebeat
+#### Смотреть журнал например filebeat
 
 journalctl -u filebeat.service
 
-### Filebeat quick start: installation and configuration
+#### Filebeat quick start: installation and configuration
 
 https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-installation-configuration.html
 
-### Загрузить GeoLite2-City.mmdb можно (но из-за санкций может не получится):
+#### Загрузить GeoLite2-City.mmdb можно (но из-за санкций может не получится):
 
 https://dev.maxmind.com/geoip/geolite2-free-geolocation-data#Download_Access
 
-### Установку и настройку можно посмотреть тут:
+#### Установку и настройку можно посмотреть тут:
 
 https://www.dmosk.ru/instruktions.php?object=elk-ubuntu#logstash
 
