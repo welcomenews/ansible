@@ -14,6 +14,16 @@ $ sudo apt update
 $ sudo apt install software-properties-common
 $ sudo add-apt-repository --yes --update ppa:ansible/ansible
 $ sudo apt install ansible
+
+
+# Installing Ansible on RHEL, CentOS, or Fedora
+
+On Fedora:
+$ sudo dnf install ansible
+
+On RHEL and CentOS:
+$ sudo yum install ansible
+
 ```
 ```
 # Встроенная проверка 
