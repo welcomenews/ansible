@@ -6,7 +6,7 @@
 Type command:
 
 sudo apt-get install openssh-server
-
+```
 ```
 # Installing Ansible on Ubuntu
 
@@ -15,7 +15,7 @@ $ sudo apt install software-properties-common
 $ sudo add-apt-repository --yes --update ppa:ansible/ansible
 $ sudo apt install ansible
 ```
-
+```
 # Встроенная проверка 
 
 ## Проверка синтаксиса файла reactjs_playbook.yml
