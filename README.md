@@ -73,6 +73,9 @@ ansible webservers -m yum -a "name=acme-1.5 state=present"
 ## Ensure a service is started on all webservers
 ansible webservers -m service -a "name=httpd state=started"
 
+## Запустить плайбук с интерпритатором python3
+ansible-playbook -e 'ansible_python_interpreter=/usr/bin/python3' -i consul.inv site.yml
+
 ```
 
 ```
