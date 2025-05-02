@@ -10,6 +10,9 @@
           register: copy_result
           notify:
             - Restart nginx
+            
+        - name: "Validate configs"
+          ansible.builtin.command: nginx -t    
 
         - name: Flush handlers
           meta: flush_handlers
@@ -22,6 +25,9 @@
           when: copy_result.backup_file is defined
           notify:
             - Restart nginx
+
+        - name: "Validate configs"
+          ansible.builtin.command: nginx -t    
 
         - name: Flush handlers after restore
           meta: flush_handlers
