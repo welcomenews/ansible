@@ -1,0 +1,42 @@
+- name: Update nginx config with rollback and cleanup
+  hosts: web
+  tasks:
+    - block:
+        - name: Copy config
+          ansible.builtin.copy:
+            src: nginx.conf
+            dest: /etc/nginx/nginx.conf
+            backup: true
+          register: copy_result
+          notify:
+            - Restart nginx
+
+        - name: Flush handlers
+          meta: flush_handlers
+
+      rescue:
+        - name: Restore backup
+          ansible.builtin.copy:
+            src: "{{ copy_result.backup_file }}"
+            dest: /etc/nginx/nginx.conf
+          when: copy_result.backup_file is defined
+          notify:
+            - Restart nginx
+
+        - name: Flush handlers after restore
+          meta: flush_handlers
+
+      always:
+        - name: Remove backup
+          ansible.builtin.file:
+            path: "{{ copy_result.backup_file }}"
+            state: absent
+          when: copy_result.backup_file is defined
+
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+        
