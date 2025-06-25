@@ -37,11 +37,14 @@ ansible-playbook reactjs_playbook.yml --check
 ## Проверить доступность всех хостов из списка hosts
 ansible -i hosts all -m ping
 
-## Проверить доступность gitlab-ost-prod-app01 хоста из списка hosts
+## Проверить доступность gitlab-ost-prod-app01 хоста из инета
 ansible all -i gitlab-ost-prod-app01, -m ping
 
-## Проверить доступность gitlab-ost-prod-app01 и dockreg-ost-prod-app01 хостов из списка hosts
+## Проверить доступность gitlab-ost-prod-app01 и dockreg-ost-prod-app01 хостов из инета
 ansible all -i gitlab-ost-prod-app01,dockreg-ost-prod-app01 -m ping
+
+## Проверить доступность gitlab-ost-prod-app01 и dockreg-ost-prod-app01 хостов из списка hosts
+ansible gitlab-ost-prod-app01,ntp-ost-prod-app03 -i hosts -m ping
 
 ## Увидить всё на всх машинах
 ansible all -m setup
