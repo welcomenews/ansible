@@ -50,7 +50,7 @@ ansible gitlab-ost-prod-app01,ntp-ost-prod-app03 -i hosts -m ping
 ansible all -m setup
 
 ## Проверить какой тип OS
-ansible gitlab-ost-prod-app01 -m setup -a "filter=ansible_distribution"
+ansible gitlab-ost-prod-app01 -i hosts -m setup -a "filter=ansible_distribution"
 
 ## Проверить что именно запуститься и на каких серверах. (Выполнения не будет, только инфа)
 ansible-playbook -K -i consul.inv site.yml --list-tasks
