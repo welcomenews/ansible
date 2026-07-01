@@ -72,6 +72,7 @@ ansible atlanta -a "/sbin/reboot"
 
 ## Выполнить shell команду
 ansible raleigh -m shell -a 'echo $TERM'
+ansible srvost5204 -i hosts -m shell -a "sudo systemctl restart zabbix-agent2.service"
 
 ## Copy a file directly to all servers in the [atlanta] group
 ansible atlanta -m copy -a "src=/etc/hosts dest=/tmp/hosts"
